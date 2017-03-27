@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "../0000 - Commons/Enable strict mode.source.bash"
+source "../9999 - Commons/Enable strict mode.source.bash"
 
 # Defensive Bash Programming - main function, program entry point
 # http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "../0000 - Commons/Enable strict mode.source.bash"
+source "../9999 - Commons/Enable strict mode.source.bash"
 
 declare -ar commandline_argument_list_at=("${@}")
 declare -ir commandline_argument_quantity=${#}
