@@ -3,7 +3,14 @@
 # 林博仁 <Buo.Ren.Lin@gmail.com> © 2016, 2017
 source "../9999 - Commons/Enable strict mode.source.bash"
 
-while getopts "dh" short_argument; do
+printf "# getopts demonstration #\n"
+
+printf "## Demonstrating Normal Mode(Not Implemented Yet) ##\n"
+
+printf "\n"
+
+printf "## Demonstrating Silent Mode ##\n"
+while getopts ":dh" short_argument; do
 	case "${short_argument}" in
 		d)
 			echo "-d found"
@@ -11,7 +18,7 @@ while getopts "dh" short_argument; do
 		h)
 			echo "-h found"
 		;;
-		\?)
+		?)
 			echo "Invalid option: $OPTARG"
 		;;
 	esac
