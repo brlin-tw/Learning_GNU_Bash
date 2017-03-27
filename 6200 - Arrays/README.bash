@@ -52,29 +52,26 @@ main() {
 	process_commandline_arguments ${GLOBAL_COMMANDLINE_ARGUMENT_NUMBER_ORIGINAL} "$GLOBAL_COMMANDLINE_ARGUMENT_LIST_ORIGINAL"
 
 	# process global flags
-	if [ $global_enable_debugging ]; then
+	if [ ! $global_enable_debugging ]; then
 		set -x
-	elif [ $global_just_show_help ]; then
+	fi
+	if [ ! $global_just_show_help ]; then
 		print_help_message "${GLOBAL_EXECUTABLE_PATH}"
 		exit 0
 	fi
 
-	if [ $global_enable_debugging ]; then
-		set +x
-	fi
+	set +x
 	printf "## Declare an array ##\n"
-	if [ $global_enable_debugging ]; then
+	if [ ! $global_enable_debugging ]; then
 		set -x
 	fi
 	declare -a animals;
 	animals=(dog cat mouse lion human monkey elephant)
 
-	if [ $global_enable_debugging ]; then
-		set +x
-	fi
+	set +x
 	printf "\n"
 	printf "## Refer an element of an array ##\n"
-	if [ $global_enable_debugging ]; then
+	if [ ! $global_enable_debugging ]; then
 		set -x
 	fi
 	printf "The  0th element of the array animals is %s\n" "${animals[0]}"
@@ -82,12 +79,10 @@ main() {
 	printf "The  2nd element of the array animals is %s\n" "${animals[2]}"
 	printf "The  3rd element of the array animals is %s\n" "${animals[3]}"
 
-	if [ $global_enable_debugging ]; then
-		set +x
-	fi
+	set +x
 	printf "\n"
 	printf "## Negative index referenced from the end of the array ##\n"
-	if [ $global_enable_debugging ]; then
+	if [ ! $global_enable_debugging ]; then
 		set -x
 	fi
 	printf "The -4th element of the array animals is %s\n" "${animals[-4]}"
@@ -95,23 +90,19 @@ main() {
 	printf "The -2nd element of the array animals is %s\n" "${animals[-2]}"
 	printf "The -1st element of the array animals is %s\n" "${animals[-1]}"
 
-	if [ $global_enable_debugging ]; then
-		set +x
-	fi
+	set +x
 	printf "\n"
 	printf '## If the SUBSCRIPT is `@` or `*`, the word expands to all members of the array NAME ##\n'
-	if [ $global_enable_debugging ]; then
+	if [ ! $global_enable_debugging ]; then
 		set -x
 	fi
 	printf "\${animals[*]} expands to %s\n" ${animals[*]}
 	printf "\${animals{@]} expands to %s\n" ${animals[@]}
 
-	if [ $global_enable_debugging ]; then
-		set +x
-	fi
+	set +x
 	printf "\n"
 	printf 'These subscripts differ only when the word appears within double quotes. If the word is double-quoted, `${NAME[*]}` expands to a single word with the value of each array member separated by the first character of the `IFS` variable, and `${NAME[@]}` expands each element of NAME to a separate word.\n'
-	if [ $global_enable_debugging ]; then
+	if [ ! $global_enable_debugging ]; then
 		set -x
 	fi
 	printf "\"\${animals[*]}\" expands to %s\n" "${animals[*]}"
