@@ -1,67 +1,90 @@
 #!/usr/bin/env bash
-# 上列為宣告執行 script 程式用的殼程式(shell)的 shebang
-# 〈程式檔名〉 - 〈程式描述文字（一言以蔽之）〉
-# 〈程式智慧財產權擁有者名諱、地址（選用）〉 © 〈智慧財產權生效年〉
-# 〈更多程式描述文字〉
+# Bash array demonstration
+# 林博仁 © 2018
 
-######## File scope variable definitions ########
-# Defensive Bash Programming - not-overridable primitive definitions
-# http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/
-# SC2155 - Declare and assign separately to avoid masking return values · koalaman/shellcheck Wiki
-# https://github.com/koalaman/shellcheck/wiki/SC2155
-GLOBAL_EXECUTABLE_FILENAME="$(basename "$0")"
-readonly GLOBAL_EXECUTABLE_FILENAME
+## Makes debuggers' life easier - Unofficial Bash Strict Mode
+## BASHDOC: Shell Builtin Commands - Modifying Shell Behavior - The Set Builtin
+set \
+	-o errexit \
+	-o errtrace \
+	-o nounset \
+	-o pipefail
 
-GLOBAL_EXECUTABLE_DIRECTORY="$(realpath --relative-to="$(pwd)" --no-symlinks "$(dirname "$0")")"
-readonly GLOBAL_EXECUTABLE_DIRECTORY
+## Runtime Dependencies Checking
+declare\
+	runtime_dependency_checking_result=still-pass\
+	required_software
 
-GLOBAL_EXECUTABLE_PATH="${GLOBAL_EXECUTABLE_DIRECTORY}/${GLOBAL_EXECUTABLE_FILENAME}"
-readonly GLOBAL_EXECUTABLE_PATH
+for required_command in \
+	basename \
+	dirname \
+	realpath; do
+	if ! command -v "${required_command}" &>/dev/null; then
+		runtime_dependency_checking_result=fail
 
-declare -a GLOBAL_COMMANDLINE_ARGUMENT_LIST_ORIGINAL
-GLOBAL_COMMANDLINE_ARGUMENT_LIST_ORIGINAL="$*"
-readonly GLOBAL_COMMANDLINE_ARGUMENT_LIST_ORIGINAL
+		case "${required_command}" in
+			basename \
+			|dirname \
+			|realpath)
+				required_software='GNU Coreutils'
+				;;
+			*)
+				required_software="${required_command}"
+				;;
+		esac
 
-GLOBAL_COMMANDLINE_ARGUMENT_NUMBER_ORIGINAL=$#
-readonly GLOBAL_COMMANDLINE_ARGUMENT_NUMBER_ORIGINAL
-
-## Unofficial Bash Script Mode
-## http://redsymbol.net/articles/unofficial-bash-strict-mode/
-# 將未定義的變數的參考視為錯誤
-set -u
-
-# Exit immediately if a pipeline, which may consist of a single simple command, a list, or a compound command returns a non-zero status.  The shell does not exit if the command that fails is part of the command list immediately following a `while' or `until' keyword, part of the test in an `if' statement, part of any command executed in a `&&' or `||' list except the command following the final `&&' or `||', any command in a pipeline but the last, or if the command's return status is being inverted with `!'.  If a compound command other than a subshell returns a non-zero status because a command failed while `-e' was being ignored, the shell does not exit.  A trap on `ERR', if set, is executed before the shell exits.
-set -e
-
-# If set, the return value of a pipeline is the value of the last (rightmost) command to exit with a non-zero status, or zero if all commands in the pipeline exit successfully.
-set -o pipefail
-
-######## File scope variable definitions ended ########
-
-######## Included files ########
-
-######## Included files ended ########
-
-######## Program ########
-global_just_show_help=0
-global_enable_debugging=0
-
-# Defensive Bash Programming - main function, program entry point
-# http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/
-main() {
-	process_commandline_arguments ${GLOBAL_COMMANDLINE_ARGUMENT_NUMBER_ORIGINAL} "$GLOBAL_COMMANDLINE_ARGUMENT_LIST_ORIGINAL"
-
-	# process global flags
-	if [ ! $global_enable_debugging ]; then
-		set -x
+		printf -- \
+			'Error: This program requires "%s" to be installed and its executables in the executable searching paths.\n' \
+			"${required_software}" \
+			1>&2
+		unset required_software
 	fi
-	if [ ! $global_just_show_help ]; then
-		print_help_message "${GLOBAL_EXECUTABLE_PATH}"
-		exit 0
-	fi
+done; unset required_command required_software
 
+if [ "${runtime_dependency_checking_result}" = fail ]; then
+	printf -- \
+		'Error: Runtime dependency checking fail, the progrom cannot continue.\n' \
+		1>&2
+	exit 1
+fi; unset runtime_dependency_checking_result
+
+## Non-overridable Primitive Variables
+## BASHDOC: Shell Variables » Bash Variables
+## BASHDOC: Basic Shell Features » Shell Parameters » Special Parameters
+if [ -v 'BASH_SOURCE[0]' ]; then
+	RUNTIME_EXECUTABLE_PATH="$(realpath --strip "${BASH_SOURCE[0]}")"
+	RUNTIME_EXECUTABLE_FILENAME="$(basename "${RUNTIME_EXECUTABLE_PATH}")"
+	RUNTIME_EXECUTABLE_NAME="${RUNTIME_EXECUTABLE_FILENAME%.*}"
+	RUNTIME_EXECUTABLE_DIRECTORY="$(dirname "${RUNTIME_EXECUTABLE_PATH}")"
+	RUNTIME_COMMANDLINE_BASECOMMAND="${0}"
+	# We intentionally leaves these variables for script developers
+	# shellcheck disable=SC2034
+	declare -r \
+		RUNTIME_EXECUTABLE_PATH \
+		RUNTIME_EXECUTABLE_FILENAME \
+		RUNTIME_EXECUTABLE_NAME \
+		RUNTIME_EXECUTABLE_DIRECTORY \
+		RUNTIME_COMMANDLINE_BASECOMMAND
+fi
+declare -ar RUNTIME_COMMANDLINE_ARGUMENTS=("${@}")
+
+declare -i global_enable_debugging=0
+
+## init function: entrypoint of main program
+## This function is called near the end of the file,
+## with the script's command-line parameters as arguments
+init(){
+	if ! process_commandline_arguments; then
+		printf -- \
+			'Error: Invalid command-line parameters.\n' \
+			1>&2
+
+		printf '\n' # separate error message and help message
+		print_help
+		exit 1
+	fi
 	set +x
-	printf "## Declare an array ##\n"
+	printf '## Declare an array ##\n'
 	if [ ! $global_enable_debugging ]; then
 		set -x
 	fi
@@ -69,128 +92,165 @@ main() {
 	animals=(dog cat mouse lion human monkey elephant)
 
 	set +x
-	printf "\n"
-	printf "## Refer an element of an array ##\n"
+	printf '\n'
+	printf '## Refer an element of an array ##\n'
 	if [ ! $global_enable_debugging ]; then
 		set -x
 	fi
-	printf "The  0th element of the array animals is %s\n" "${animals[0]}"
-	printf "The  1st element of the array animals is %s\n" "${animals[1]}"
-	printf "The  2nd element of the array animals is %s\n" "${animals[2]}"
-	printf "The  3rd element of the array animals is %s\n" "${animals[3]}"
+	printf 'The  0th element of the array animals is %s\n' "${animals[0]}"
+	printf 'The  1st element of the array animals is %s\n' "${animals[1]}"
+	printf 'The  2nd element of the array animals is %s\n' "${animals[2]}"
+	printf 'The  3rd element of the array animals is %s\n' "${animals[3]}"
 
 	set +x
-	printf "\n"
-	printf "## Negative index referenced from the end of the array ##\n"
+	printf '\n'
+	printf '## Negative index referenced from the end of the array ##\n'
 	if [ ! $global_enable_debugging ]; then
 		set -x
 	fi
-	printf "The -4th element of the array animals is %s\n" "${animals[-4]}"
-	printf "The -3rd element of the array animals is %s\n" "${animals[-3]}"
-	printf "The -2nd element of the array animals is %s\n" "${animals[-2]}"
-	printf "The -1st element of the array animals is %s\n" "${animals[-1]}"
+	printf 'The -4th element of the array animals is %s\n' "${animals[-4]}"
+	printf 'The -3rd element of the array animals is %s\n' "${animals[-3]}"
+	printf 'The -2nd element of the array animals is %s\n' "${animals[-2]}"
+	printf 'The -1st element of the array animals is %s\n' "${animals[-1]}"
 
 	set +x
-	printf "\n"
+	printf '\n'
+	# Not an paramter expansion
+	# shellcheck disable=SC2016
 	printf '## If the SUBSCRIPT is `@` or `*`, the word expands to all members of the array NAME ##\n'
 	if [ ! $global_enable_debugging ]; then
 		set -x
 	fi
-	printf "\${animals[*]} expands to %s\n" ${animals[*]}
-	printf "\${animals{@]} expands to %s\n" ${animals[@]}
+	# Not an paramter expansion; intentionly not quoted
+	# shellcheck disable=SC2016,SC2086
+	echo -n '${animals[*]} expands to' ${animals[*]}
+	# Not an paramter expansion; intentionly not quoted
+	# shellcheck disable=SC2016,SC2068
+	echo -n '${animals{@]} expands to' ${animals[@]}
 
 	set +x
-	printf "\n"
+	printf '\n'
+	# Not an paramter expansion
+	# shellcheck disable=SC2016
 	printf 'These subscripts differ only when the word appears within double quotes. If the word is double-quoted, `${NAME[*]}` expands to a single word with the value of each array member separated by the first character of the `IFS` variable, and `${NAME[@]}` expands each element of NAME to a separate word.\n'
 	if [ ! $global_enable_debugging ]; then
 		set -x
 	fi
-	printf "\"\${animals[*]}\" expands to %s\n" "${animals[*]}"
-	printf "\"\${animals{@]}\" expands to %s\n" "${animals[@]}"
+	# Not an paramter expansion
+	# shellcheck disable=SC2016
+	printf '${animals[*]} expands to %s\n' "${animals[*]}"
+	# Not an paramter expansion
+	# shellcheck disable=SC2016
+	printf '${animals{@]} expands to %s\n' "${animals[@]}"
 
 	exit 0
-}
+}; declare -fr init
+
+print_help(){
+	# Backticks in help message is Markdown's <code> markup
+	# shellcheck disable=SC2016
+	{
+		printf '# Help Information for %s #\n' \
+			"${RUNTIME_COMMANDLINE_BASECOMMAND}"
+		printf '## SYNOPSIS ##\n'
+		printf '* `"%s" _command-line_options_`\n\n' \
+			"${RUNTIME_COMMANDLINE_BASECOMMAND}"
+
+		printf '## COMMAND-LINE OPTIONS ##\n'
+		printf '### `-d` / `--debug` ###\n'
+		printf 'Enable script debugging\n\n'
+
+		printf '### `-h` / `--help` ###\n'
+		printf 'Print this message\n\n'
+	}
+	return 0
+}; declare -fr print_help;
 
 process_commandline_arguments() {
-	# Defensive Bash Programming - Command line arguments
-	# http://www.kfirlavi.com/blog/2012/11/14/defensive-bash-programming/
-	local argument_quantity="$1"; shift
-	if [ 0 -eq ${argument_quantity} ]; then
-		return
+	if [ "${#RUNTIME_COMMANDLINE_ARGUMENTS[@]}" -eq 0 ]; then
+		return 0
 	fi
-	local arguments="$@"
 
-	# 所有目前已經翻譯為短選項的命令列參數（一開始是空字串，有東西之後，結尾總是會有參數分隔字元（也就是空白））
-	local arguments_translated=""
+	# Modifyable parameters for parsing by consuming
+	local -a parameters=("${RUNTIME_COMMANDLINE_ARGUMENTS[@]}")
 
-	# 翻譯長版本選項為短版本選項
-	for argument in $arguments; do # $arguments 是有意不要被引號括住的，才會被 for 迴圈一一走訪
-		local delimiter=""
-		local argument_separater=" "
+	# Normally we won't want debug traces to appear during parameter parsing, so we add this flag and defer its activation till returning(Y: Do debug)
+	local enable_debug=N
 
-		case $argument in
-			--help)
-				arguments_translated="${arguments_translated}-h${argument_separater}"
-			;;
-			--debug)
-				arguments_translated="${arguments_translated}-d${argument_separater}"
-			;;
-			# pass anything else
-			*)
-				# 報錯所有不認識的長選項
-				if [ "${argument:0:2}" == "--" ]; then
-					printf "錯誤：%s 命令列選項不存在！\n" "$argument" 1>&2
-					printf "錯誤：請執行「%s --help」命令以查詢所有可用的命令列選項。\n" "${GLOBAL_EXECUTABLE_PATH}" 1>&2
-					exit 1
-				fi
-
-				# 如果參數不是「-」開頭（不是命令列選項）就將 $delimiter 改為「雙引號"」，不然的話維持「（空字串）」
-				# -e -> ${arguments_translated}-e${argument_separater}
-				# et -> ${arguments_translated}"et"${argument_separater}
-				[[ "${argument:0:1}" == "-" ]] || delimiter="\""
-				arguments_translated="${arguments_translated}${delimiter}${argument}${delimiter}${argument_separater}"
-			;;
-		esac
+	while true; do
+		if [ "${#parameters[@]}" -eq 0 ]; then
+			break
+		else
+			case "${parameters[0]}" in
+				--debug \
+				|-d)
+					enable_debug=Y
+					global_enable_debugging=1
+					;;
+				--help \
+				|-h)
+					print_help;
+					exit 0
+					;;
+				*)
+					printf -- \
+						'%s: Error: Unknown command-line argument "%s"\n' \
+						"${FUNCNAME[0]}" \
+						"${parameters[0]}" \
+						>&2
+					return 1
+					;;
+			esac
+			# shift array by 1 = unset 1st then repack
+			unset 'parameters[0]'
+			if [ "${#parameters[@]}" -ne 0 ]; then
+				parameters=("${parameters[@]}")
+			fi
+		fi
 	done
 
-	#Reset the positional parameters to the short options
-	eval set -- $arguments_translated
+	if [ "${enable_debug}" = Y ]; then
+		trap 'trap_return "${FUNCNAME[0]}"' RETURN
+		set -o xtrace
+	fi
+	return 0
+}; declare -fr process_commandline_arguments
 
-	while getopts "dh" short_argument; do
-		case $short_argument in
-			d)
-				global_enable_debugging=1
-			;;
-			h)
-				global_just_show_help=1
-			;;
+## Traps: Functions that are triggered when certain condition occurred
+## Shell Builtin Commands » Bourne Shell Builtins » trap
+trap_errexit(){
+	printf \
+		'An error occurred and the script is prematurely aborted\n' \
+		1>&2
+	return 0
+}; declare -fr trap_errexit; trap trap_errexit ERR
 
-		esac
-	done
+trap_exit(){
+	return 0
+}; declare -fr trap_exit; trap trap_exit EXIT
 
-	# 如果參數未設定的話採用預設值
+trap_return(){
+	local returning_function="${1}"
 
-	return
-}
-declare -fr process_commandline_arguments
+	printf \
+		'DEBUG: %s: returning from %s\n' \
+		"${FUNCNAME[0]}" \
+		"${returning_function}" \
+		1>&2
+}; declare -fr trap_return
 
-print_help_message(){
-	local command="$@"
+trap_interrupt(){
+	printf '\n' # Separate previous output
+	printf \
+		'Recieved SIGINT, script is interrupted.' \
+		1>&2
+	return 1
+}; declare -fr trap_interrupt; trap trap_interrupt INT
 
-	printf "## 使用方法 ##\n"
-	printf "%s 〈命令列選項〉\n" "$command"
-	printf "\n"
-	printf "注意如果程式路徑包含空白字元，您可能需要把它們用單／雙引號包住，詳情請參考您使用的 shell 的使用手冊\n"
-	printf "\n"
-	printf "## 命令列選項 ##\n"
-	printf "* --help / -h  \n"
-	printf "\t印出幫助訊息\n"
-	printf "\n"
-	printf "* --debug / -d  \n"
-	printf "\t啟用除錯模式\n"
-	printf "\n"
-	return
-}
+init "${@}"
 
-# 程式進入點
-main
+## This script is based on the GNU Bash Shell Script Template project
+## https://github.com/Lin-Buo-Ren/GNU-Bash-Shell-Script-Template
+## and is based on the following version:
+## GNU_BASH_SHELL_SCRIPT_TEMPLATE_VERSION="v3.3.0"
+## You may rebase your script to incorporate new features and fixes from the template
