@@ -35,7 +35,7 @@ declare -r RUNTIME_EXECUTABLE_PATH_RELATIVE="${0}"
 declare -r RUNTIME_COMMAND_BASE="${RUNTIME_COMMAND_BASE:-${0}}"
 
 trap_errexit(){
-	printf "An error occurred and the script is prematurely aborted\n" 1>&2
+	printf 'An error occurred and the script is prematurely aborted\n' 1>&2
 	return 0
 }; declare -fr trap_errexit; trap trap_errexit ERR
 
@@ -49,8 +49,8 @@ init(){
 	declare -ar indexed_array_null=()
 
 	declare -Ar associative_array=(\
-		["apple"]="1" \
-		["banana"]="2" \
+		[apple]=1 \
+		[banana]=2 \
 	)
 	declare -Ar associative_array_null=()
 
@@ -58,9 +58,9 @@ init(){
 		declare -n array_nameref="${parameter}"
 
 		if [ ! -v array_nameref ]; then
-			printf "%s is NOT set\n" "${parameter}"
+			printf '%s is NOT set\n' "${parameter}"
 		else
-			printf "%s is set\n" "${parameter}"
+			printf '%s is set\n' "${parameter}"
 		fi
 
 		unset -n array_nameref
