@@ -82,7 +82,7 @@ install:
   - pip install --user pre-commit
 
 ### You can run custom commands before the script/build step
-before_script: true
+before_script:
   - git diff-tree -z --no-commit-id --name-only -r HEAD | xargs --null pre-commit run --files
 
 ### Put your build scripts here
