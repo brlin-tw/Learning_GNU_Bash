@@ -5,10 +5,15 @@ set -o errtrace
 set -o pipefail
 
 init(){
-	sleep 5
+	a_long_running_function
 	inexist_command
 	exit 0
-}; declare -ft init
+}
+
+a_long_running_function(){
+	echo "${FUNCNAME[0]} called"
+	sleep 5
+}; declare -ft a_long_running_function
 
 trap_exit(){
 	echo "EXIT trap is triggered."
@@ -32,12 +37,12 @@ trap_debug(){
 }
 
 trap_err(){
-	echo "ERR trap is triggered, errored command is $BASH_COMMAND"
+	echo "ERR trap is triggered, errored command is $BASH_COMMAND with exit status $?"
 	return 0
 }
 
 trap_return(){
-	echo "RETURN trap is triggered, returning from $FUNCNAME[1]"
+	echo "RETURN trap is triggered, returning from ${FUNCNAME[1]}"
 }
 
 trap_int(){
