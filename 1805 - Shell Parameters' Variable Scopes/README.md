@@ -38,3 +38,8 @@ If two variables _with the same name_ are defined in both of the _global scope_ 
 ### Depiction script
 
 [depict-the-variable-shadowing-phenomenon.bash](depict-the-variable-shadowing-phenomenon.bash)
+
+## Known issues
+### Variable with the same name can't be declared in the local scope if the global one is declared read-only
+
+Reproducible sample: [BUG: Variable with the same name can't be declared in the local scope if the global one is declared read-only.bash](<BUG: Variable with the same name can't be declared in the local scope if the global one is declared read-only.bash>)
