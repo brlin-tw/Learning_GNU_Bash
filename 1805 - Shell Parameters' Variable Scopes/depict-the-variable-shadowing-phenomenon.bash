@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 # Depict the variable shadowing phenomenon
+set \
+    -o errexit \
+    -o errtrace \
+    -o nounset
+
 variable_shadowed='(Value to be shadowed in the function)'
 variable_retained='(Value not shadowed in the function)'
 
