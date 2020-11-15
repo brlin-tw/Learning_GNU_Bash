@@ -9,7 +9,7 @@ set \
 declare -r variable_shadowed='(Value to be shadowed in the function)'
 
 check_values_of_variables_in_different_scope(){
-    local -r variable_shadowed="Another value"
+    local variable_shadowed="Another value"
 
     printf 'In the %s context: \n' "${FUNCNAME[0]}"
     printf 'variable_shadowed = %s\n' "${variable_shadowed}"
